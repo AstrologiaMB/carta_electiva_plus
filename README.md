@@ -56,20 +56,57 @@ Este proyecto es una versión mejorada inspirada en el proyecto original de cart
   - pytz==2024.1 (zonas horarias)
   - timezonefinder==5.2.0 (ubicaciones)
 
-### Entorno Virtual
-Se recomienda usar un entorno virtual para evitar conflictos de dependencias:
+### Configuración del Entorno
+
+#### Entorno Virtual
+Este proyecto utiliza el entorno virtual del proyecto original ubicado en:
+```
+/Users/apple/electiva/carta_electiva/venv_3.11
+```
+
+Para activar el entorno:
 ```bash
-# Crear entorno virtual
-python -m venv venv_3.11
-
-# Activar entorno virtual
-# En Windows:
-venv_3.11\Scripts\activate
 # En macOS/Linux:
-source venv_3.11/bin/activate
+source ../carta_electiva/venv_3.11/bin/activate
 
-# Instalar dependencias
-pip install -r requirements.txt
+# En Windows:
+..\carta_electiva\venv_3.11\Scripts\activate
+```
+
+Nota: El entorno virtual ya contiene todas las dependencias necesarias instaladas y configuradas correctamente. No es necesario instalar dependencias adicionales.
+
+#### Variables de Entorno
+El proyecto utiliza un archivo .env para configurar el PYTHONPATH:
+```
+PYTHONPATH=/Users/apple/electiva/carta_electiva_plus
+```
+
+Para ejecutar scripts manualmente, asegúrate de incluir el PYTHONPATH:
+```bash
+PYTHONPATH=/Users/apple/electiva/carta_electiva_plus python your_script.py
+```
+
+#### Verificación de la Instalación
+El proyecto incluye un script de prueba que verifica la instalación y funcionalidad básica:
+```bash
+# Activar entorno y ejecutar prueba
+source ../carta_electiva/venv_3.11/bin/activate
+PYTHONPATH=/Users/apple/electiva/carta_electiva_plus python testing/test_import.py
+```
+
+El script verifica:
+- Importación correcta de módulos
+- Creación de instancias
+- Generación de DataFrames
+- Cálculo de resultados
+
+Una instalación correcta mostrará:
+```
+Probando importación de módulos...
+✓ final_table importado correctamente
+✓ moon_aptitude importado correctamente
+✓ Creación de instancia moonAptitude exitosa
+✓ Generación de DataFrame exitosa
 ```
 
 ## Configuración del Entorno de Desarrollo
@@ -102,23 +139,44 @@ pip install -r requirements.txt
      ```
 
 
-## Estructura General del Programa
+## Estructura del Proyecto
 
 ```
-carta_electiva/
-├── astro_package/                # Paquete principal
-│   ├── moon_aptitude.py         # Análisis de Luna
-│   ├── rulership_asc.py         # Análisis Regente ASC
-│   ├── rulership_10.py          # Análisis Regente Casa 10
-│   ├── optimal_minutes.py       # Combinaciones Positivas
-│   ├── negative_minutes.py      # Combinaciones Negativas
-│   ├── enraizar_a_bn.py        # Enraizamiento entre cartas
-│   ├── final_table.py          # Generación tabla final
-│   └── settings_astro.py        # Configuraciones astrológicas
-└── testing/                     # Scripts de prueba
-    ├── tabla_final.ipynb        # Versión básica
-    └── tabla_final_expanded.ipynb # Versión detallada
+carta_electiva_plus/
+├── .env                         # Configuración de PYTHONPATH
+├── .gitignore                   # Exclusiones de Git
+├── LICENSE                      # Licencia MIT
+├── README.md                    # Este archivo
+├── requirements.txt             # Dependencias del proyecto
+├── setup.py                     # Configuración de instalación
+├── astro_package/              # Paquete principal
+│   ├── __init__.py            # Inicialización del paquete (v2.0.0)
+│   ├── moon_aptitude.py       # Análisis de Luna
+│   ├── rulership_asc.py       # Análisis Regente ASC
+│   ├── rulership_10.py        # Análisis Regente Casa 10
+│   ├── optimal_minutes.py     # Combinaciones Positivas
+│   ├── negative_minutes.py    # Combinaciones Negativas
+│   ├── enraizar_a_bn.py      # Enraizamiento entre cartas
+│   ├── final_table.py        # Generación tabla final
+│   ├── settings_astro.py     # Configuraciones astrológicas
+│   └── utils/                # Utilidades compartidas
+│       ├── __init__.py
+│       └── decorators.py
+└── testing/                  # Scripts de prueba
+    ├── test_import.py       # Verificación de instalación
+    └── tabla_final_expanded.ipynb # Análisis detallado
 ```
+
+### Archivos Principales
+
+- **.env**: Configura el PYTHONPATH para el proyecto
+- **setup.py**: Configuración de instalación del paquete
+- **requirements.txt**: Lista de dependencias con versiones específicas
+- **test_import.py**: Script para verificar la instalación
+
+### Módulos del Paquete
+
+El paquete `astro_package` (v2.0.0) contiene los módulos principales para el análisis astrológico. Cada módulo está diseñado para una función específica y puede ser usado independientemente o en conjunto a través del módulo integrador `final_table.py`.
 
 ## Flujo de Datos
 
@@ -322,3 +380,49 @@ carta_electiva/
    - Revisar momentos con mayor puntaje
    - Verificar condiciones de aptitud
    - Analizar distribución de puntos por módulo
+
+## Solución de Problemas Comunes
+
+1. **El paquete no se importa correctamente**
+   - Problema: Error "No module named 'astro_package'"
+   - Solución: Asegurarse de que PYTHONPATH incluye el directorio del proyecto
+   ```bash
+   PYTHONPATH=/Users/apple/electiva/carta_electiva_plus python script.py
+   ```
+
+2. **Los porcentajes no coinciden con los puntos**
+   - Problema: Los porcentajes mostrados no reflejan los puntos calculados
+   - Solución: Verificar el orden de las cartas en FinalTableGenerator
+   ```python
+   # Orden correcto
+   generator = FinalTableGenerator(
+       carta_natal_A,     # Carta fija
+       carta_momento_Bn   # Momento a evaluar
+   )
+   ```
+
+3. **No se ven cambios entre momentos consecutivos**
+   - Problema: Los resultados son idénticos para momentos muy cercanos
+   - Solución: Usar intervalos de al menos 10 minutos
+   ```python
+   # Intervalo recomendado
+   interval_hours = 0.167  # 10 minutos
+   ```
+
+4. **Errores en la evaluación de aspectos**
+   - Problema: Los aspectos planetarios no se detectan correctamente
+   - Solución: Verificar el formato de fechas y coordenadas
+   ```python
+   # Formato correcto
+   fecha = "28/07/2024 6:26"
+   latitud = "32s29"     # Sur es 's'
+   longitud = "58w14"    # Oeste es 'w'
+   ```
+
+## Créditos
+
+Este proyecto es una versión mejorada basada en el trabajo original de carta_electiva. Las mejoras incluyen:
+- Corrección en el orden de evaluación de cartas
+- Optimización de intervalos de tiempo
+- Documentación expandida
+- Scripts de verificación
